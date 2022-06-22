@@ -12,7 +12,7 @@ private:
 
     std::string m_word_list_path;
 
-    std::set<std::string> m_word_list;
+    std::vector<std::string> m_word_list;
     std::set<std::string> m_found_words;
     std::vector<std::pair<std::string, std::vector<std::pair<unsigned int, unsigned int>>>> m_solutions;
 
@@ -22,6 +22,7 @@ private:
 private:
     void Load_Word_List();
 
+    std::pair<int, int> Find_Range(std::pair<int, int> previous_range, char character_to_compare, unsigned int character_index);
     void Solve_From_Cell(unsigned int cell_x, unsigned int cell_y);
 
 public:

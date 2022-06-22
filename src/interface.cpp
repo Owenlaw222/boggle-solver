@@ -103,8 +103,8 @@ void Interface::Main_Interface(std::vector<std::pair<std::string, std::vector<st
 
     curs_set(0);
 
-    unsigned int selected_word = 0;
-    unsigned int scroll = 0;
+    int selected_word = 0;
+    int scroll = 0;
 
 
     std::sort(solutions.begin(), solutions.end(),
@@ -118,7 +118,7 @@ void Interface::Main_Interface(std::vector<std::pair<std::string, std::vector<st
     {
         clear();
 
-        for (unsigned int i = scroll; i < std::min((int)solutions.size(), LINES + (int)scroll); i++)
+        for (int i = scroll; i < std::min((int)solutions.size(), LINES + (int)scroll); i++)
         {
             if (selected_word == i)
             {
@@ -152,7 +152,7 @@ void Interface::Main_Interface(std::vector<std::pair<std::string, std::vector<st
                 }
                 break;
             case KEY_DOWN:
-                if (selected_word != solutions.size() - 1)
+                if ((long unsigned int)selected_word != solutions.size() - 1)
                 {
                     selected_word++;
                 }

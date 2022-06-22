@@ -8,9 +8,9 @@ int main()
     board_ptr->Randomize();
 
     Interface interface = Interface(board_ptr);
-    // interface.Get_User_Board_Input(0, 0);
+    //  interface.Get_User_Board_Input(0, 0);
 
-    Solver solver(board_ptr, "../words/collins-scrabble-words-2019.txt", 3, 8);
+    Solver solver(board_ptr, "../words/collins-scrabble-words-2019.txt", 3, 25);
     interface.Main_Interface(solver.Get_Solutions());
 
     return 0;

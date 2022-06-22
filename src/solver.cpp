@@ -30,7 +30,7 @@ void Solver::Load_Word_List()
 
         while (getline(file, current_line))
         {
-            m_word_list.insert(current_line);
+            m_word_list.push_back(current_line);
         }
 
         file.close();
@@ -42,63 +42,114 @@ void Solver::Load_Word_List()
     }
 }
 
+std::pair<int, int> Solver::Find_Range(std::pair<int, int> previous_range, char character_to_compare, unsigned int character_index)
+{
+    int lowest_index = -1;
+    int highest_index = -1;
+
+    for (int i = previous_range.first; i <= previous_range.second; i++)
+    {
+        if (character_index < m_word_list[i].size() && character_to_compare == m_word_list[i].at(character_index))
+        {
+            lowest_index = i;
+            break;
+        }
+    }
+    for (int i = previous_range.second; i >= previous_range.first; i--)
+    {
+        if (character_index < m_word_list[i].size() && character_to_compare == m_word_list[i].at(character_index))
+        {
+            highest_index = i;
+            break;
+        }
+    }
+
+    return {lowest_index, highest_index};
+}
+
 void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
 {
     std::pair<int, int> offsets[8] = {{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}};
 
     std::string current_word = m_board_ptr->Get_Board_Cell(cell_x, cell_y);
     std::vector<unsigned int> direction_stack = {0};
+    std::vector<std::pair<int, int>> search_range_stack = {Find_Range({0, m_word_list.size() - 1}, *m_board_ptr->Get_Board_Cell(cell_x, cell_y).c_str(), 0)};
     std::vector<std::vector<bool>> cells_visited(m_board_ptr->Get_Board_Size(), std::vector<bool>(m_board_ptr->Get_Board_Size(), false));
+
+    if (search_range_stack.back().first == -1 || search_range_stack.back().second == -1)
+    {
+        return;
+    }
 
     int current_x = cell_x;
     int current_y = cell_y;
 
-    while (direction_stack.size() != 0 && direction_stack[0] != 8)
+    while (direction_stack[0] != 8)
     {
-        if (direction_stack.size() == m_max_word_length || direction_stack.back() == 8)
+        if (current_word.size() == m_max_word_length || direction_stack.back() == 8)
         {
             cells_visited[current_x][current_y] = false;
 
-            direction_stack.pop_back();
             current_word.pop_back();
+            direction_stack.pop_back();
+            search_range_stack.pop_back();
 
             current_x -= offsets[direction_stack.back()].first;
             current_y -= offsets[direction_stack.back()].second;
 
             direction_stack.back()++;
-
             continue;
         }
 
-        int temp_x = current_x + offsets[direction_stack.back()].first;
-        int temp_y = current_y + offsets[direction_stack.back()].second;
+        std::pair<int, int> offset = offsets[direction_stack.back()];
 
-        if (temp_x < 0 || temp_y < 0 || temp_x > m_board_ptr->Get_Board_Size() - 1 || temp_y > m_board_ptr->Get_Board_Size() - 1 || cells_visited[temp_x][temp_y])
+        int offset_current_x = current_x + offset.first;
+        int offset_current_y = current_y + offset.second;
+
+        if (offset_current_x < 0 || offset_current_y < 0 || offset_current_x >= (int)m_board_ptr->Get_Board_Size() || offset_current_y >= (int)m_board_ptr->Get_Board_Size() || cells_visited[offset_current_x][offset_current_y])
         {
             direction_stack.back()++;
-
             continue;
         }
 
-        cells_visited[current_x][current_y] = true;
+        char offset_cell_char = *m_board_ptr->Get_Board_Cell(offset_current_x, offset_current_y).c_str();
 
-        current_x = temp_x;
-        current_y = temp_y;
-
-        direction_stack.push_back(0);
-        current_word.push_back(*m_board_ptr->Get_Board_Cell(current_x, current_y).c_str());
-
-        if (current_word.length() >= m_min_word_length && m_word_list.find(current_word) != m_word_list.end() && m_found_words.find(current_word) == m_found_words.end())
+        std::pair<int, int> range = Find_Range(search_range_stack.back(), offset_cell_char, current_word.size());
+        if (range.first == -1 || range.second == -1)
         {
-            m_found_words.insert(current_word);
+            direction_stack.back()++;
+            continue;
+        }
+        else
+        {
+            cells_visited[current_x][current_y] = true;
 
-            std::vector<std::pair<unsigned int, unsigned int>> path = {{cell_x, cell_y}};
-            for (unsigned int i = 0; i < direction_stack.size() - 1; i++)
+            current_x = offset_current_x;
+            current_y = offset_current_y;
+
+            current_word.push_back(offset_cell_char);
+            direction_stack.push_back(0);
+            search_range_stack.push_back(range);
+
+            if (current_word.size() >= m_min_word_length && m_found_words.find(current_word) == m_found_words.end())
             {
-                path.push_back({path.back().first + offsets[direction_stack[i]].first, path.back().second + offsets[direction_stack[i]].second});
-            }
+                for (int i = range.first; i <= range.second; i++)
+                {
+                    if (m_word_list[i] == current_word)
+                    {
+                        m_found_words.insert(current_word);
 
-            m_solutions.push_back({current_word, path});
+                        std::vector<std::pair<unsigned int, unsigned int>> path = {{cell_x, cell_y}};
+                        for (unsigned int i = 0; i < direction_stack.size() - 1; i++)
+                        {
+                            path.push_back({path.back().first + offsets[direction_stack[i]].first, path.back().second + offsets[direction_stack[i]].second});
+                        }
+
+                        m_solutions.push_back({current_word, path});
+                        break;
+                    }
+                }
+            }
         }
     }
 }
