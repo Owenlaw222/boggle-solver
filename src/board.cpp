@@ -28,7 +28,7 @@ void Board::Randomize()
     {
         case 5:
         {
-            srand(0);
+            srand(time(NULL));
 
             std::vector<std::array<std::string, 6>> die
                 = {{"U", "S", "E", "N", "S", "S"}, {"U", "O", "T", "O", "N", "W"}, {"P", "C", "E", "I", "T", "S"}, {"M", "T", "E", "T", "T", "O"}, {"G", "E", "W", "N", "E", "H"}, {"E", "C", "C", "N", "S", "T"}, {"E", "E", "E", "E", "A", "A"},

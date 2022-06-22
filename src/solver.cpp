@@ -1,5 +1,6 @@
 #include "solver.hpp"
 
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -44,27 +45,65 @@ void Solver::Load_Word_List()
 
 std::pair<int, int> Solver::Find_Range(std::pair<int, int> previous_range, char character_to_compare, unsigned int character_index)
 {
-    int lowest_index = -1;
-    int highest_index = -1;
+    std::pair<int, int> range = {-1, -1};
 
-    for (int i = previous_range.first; i <= previous_range.second; i++)
+    int low_index = previous_range.first;
+    int high_index = previous_range.second;
+    while (low_index <= high_index)
     {
-        if (character_index < m_word_list[i].size() && character_to_compare == m_word_list[i].at(character_index))
+        int middle = std::floor((high_index + low_index) / 2.0);
+
+        if (character_index >= m_word_list[middle].size() || character_to_compare > m_word_list[middle].at(character_index))
         {
-            lowest_index = i;
+            low_index = middle + 1;
+            continue;
+        }
+        else if (character_to_compare < m_word_list[middle].at(character_index))
+        {
+            high_index = middle - 1;
+            continue;
+        }
+        else if (low_index != middle)
+        {
+            high_index = middle;
+            continue;
+        }
+        else
+        {
+            range.first = middle;
             break;
         }
     }
-    for (int i = previous_range.second; i >= previous_range.first; i--)
+
+    low_index = previous_range.first;
+    high_index = previous_range.second;
+    while (low_index <= high_index)
     {
-        if (character_index < m_word_list[i].size() && character_to_compare == m_word_list[i].at(character_index))
+        int middle = std::ceil((high_index + low_index) / 2.0);
+
+        if (character_index >= m_word_list[middle].size() || character_to_compare > m_word_list[middle].at(character_index))
         {
-            highest_index = i;
+            low_index = middle + 1;
+            continue;
+        }
+        else if (character_to_compare < m_word_list[middle].at(character_index))
+        {
+            high_index = middle - 1;
+            continue;
+        }
+        else if (high_index != middle)
+        {
+            low_index = middle;
+            continue;
+        }
+        else
+        {
+            range.second = middle;
             break;
         }
     }
 
-    return {lowest_index, highest_index};
+    return range;
 }
 
 void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
