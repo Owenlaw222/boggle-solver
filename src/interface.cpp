@@ -135,7 +135,17 @@ void Interface::Main_Interface(std::vector<std::pair<std::string, std::vector<st
             attrset(A_NORMAL);
         }
 
-        Draw_Board_Path(30, 0, solutions[selected_word].second);
+        if (solutions.size() != 0)
+        {
+            Draw_Board_Path(30, 0, solutions[selected_word].second);
+        }
+        else
+        {
+            move(0, 0);
+            printw("No Words Found.");
+
+            Draw_Board(30, 0);
+        }
 
         refresh();
 

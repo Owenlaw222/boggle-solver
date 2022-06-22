@@ -1,4 +1,11 @@
 {
+    "cmake.debugConfig": {
+        "args": [
+            "-s",
+            "5",
+            "-r"
+        ]
+    },
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",

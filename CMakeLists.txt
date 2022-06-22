@@ -9,7 +9,7 @@ if(UNIX)
     set(CMAKE_CXX_FLAGS "-O3 -Wall -lncurses -g")
 endif(UNIX)
 
-add_executable(Boggle-Solver src/main.cpp
+add_executable(boggle-solver src/main.cpp
                              src/interface.cpp
                              src/board.cpp
                              src/solver.cpp)
