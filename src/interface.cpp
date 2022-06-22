@@ -48,14 +48,14 @@ void Interface::Draw_Board_Path(unsigned int board_x, unsigned int board_y, std:
 {
     for (unsigned int i = 0; i <= m_board_ptr->Get_Board_Size(); i++)
     {
-        move(board_y, board_x + i * 4);
+        move(board_y, board_x + i * 6);
         vline(ACS_VLINE, m_board_ptr->Get_Board_Size() * 4);
     }
 
     for (unsigned int i = 0; i <= m_board_ptr->Get_Board_Size(); i++)
     {
         move(board_y + i * 4, board_x);
-        hline(ACS_HLINE, m_board_ptr->Get_Board_Size() * 4 + 1);
+        hline(ACS_HLINE, m_board_ptr->Get_Board_Size() * 6 + 1);
     }
 
     for (unsigned int x = 0; x < m_board_ptr->Get_Board_Size(); x++)
@@ -64,10 +64,10 @@ void Interface::Draw_Board_Path(unsigned int board_x, unsigned int board_y, std:
         {
             if (std::find(path.begin(), path.end(), std::pair<unsigned int, unsigned int>(x, y)) != path.end())
             {
-                attrset(A_STANDOUT | A_BOLD);
+                attrset(A_BOLD | A_STANDOUT);
             }
 
-            move(board_y + y * 4 + 2, board_x + x * 4 + 2);
+            move(board_y + y * 4 + 2, board_x + x * 6 + 3);
             printw(m_board_ptr->Get_Board_Cell(x, y).c_str());
 
             attrset(A_NORMAL);
@@ -79,16 +79,20 @@ void Interface::Draw_Board_Path(unsigned int board_x, unsigned int board_y, std:
     {
         if (i != 0)
         {
-            move((board_y + path[i].second * 4 + 2) - (path[i].second - path[i - 1].second), (board_x + path[i].first * 4 + 2) - (path[i].first - path[i - 1].first));
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i - 1].second), 3 + board_x + (path[i].first * 6) - (path[i].first - path[i - 1].first));
             printw(" ");
-            move((board_y + path[i].second * 4 + 2) - ((path[i].second - path[i - 1].second) * 2), (board_x + path[i].first * 4 + 2) - ((path[i].first - path[i - 1].first) * 2));
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i - 1].second), 3 + board_x + (path[i].first * 6) - (path[i].first - path[i - 1].first) * 2);
+            printw(" ");
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i - 1].second) * 2, 3 + board_x + (path[i].first * 6) - (path[i].first - path[i - 1].first) * 3);
             printw(" ");
         }
         if (i != path.size() - 1)
         {
-            move((board_y + path[i].second * 4 + 2) - (path[i].second - path[i + 1].second), (board_x + path[i].first * 4 + 2) - (path[i].first - path[i + 1].first));
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i + 1].second), 3 + board_x + (path[i].first * 6) - (path[i].first - path[i + 1].first));
             printw(" ");
-            move((board_y + path[i].second * 4 + 2) - ((path[i].second - path[i + 1].second) * 2), (board_x + path[i].first * 4 + 2) - ((path[i].first - path[i + 1].first) * 2));
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i + 1].second), 3 + board_x + (path[i].first * 6) - (path[i].first - path[i + 1].first) * 2);
+            printw(" ");
+            move(2 + board_y + (path[i].second * 4) - (path[i].second - path[i + 1].second) * 2, 3 + board_x + (path[i].first * 6) - (path[i].first - path[i + 1].first) * 3);
             printw(" ");
         }
     }
