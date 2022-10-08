@@ -28,6 +28,7 @@ void Main_Interface::Initialize_Window()
     // Set window properties
     gtk_window_set_title(GTK_WINDOW(m_window_ptr), "Boggle Solver");
     gtk_window_set_default_size(GTK_WINDOW(m_window_ptr), 750, 750);
+    gtk_widget_set_size_request(m_window_ptr, 600, 500);
     gtk_window_set_position(GTK_WINDOW(m_window_ptr), GTK_WIN_POS_CENTER);
 
     // Setup close button
@@ -45,7 +46,8 @@ void Main_Interface::Initialize_Input_Screen()
     // Disable solve button
     gtk_widget_set_sensitive(m_solve_button_ptr, gtk_false());
 
-    // Set margin around frame
+    // Set frame properties
+    gtk_frame_set_shadow_type(GTK_FRAME(m_input_screen_frame_ptr), GTK_SHADOW_NONE);
     gtk_container_set_border_width(GTK_CONTAINER(m_input_screen_frame_ptr), 10);
 
     // Set input grid properties
@@ -103,18 +105,21 @@ void Main_Interface::Initialize_Input_Screen()
 void Main_Interface::Initialize_Solution_Screen()
 {
     // Get vector of solutions
-    std::vector<Solver::Solution> solutions = m_solver_ptr->Get_Solutions();
+    m_solutions = m_solver_ptr->Get_Solutions();
 
     // Sort alphabetically and then by length so that solutions of equal length are alphabetical
-    std::sort(solutions.begin(), solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word < b.word; });
-    std::stable_sort(solutions.begin(), solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });
+    std::sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word < b.word; });
+    std::stable_sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });
 
     // Create containers
     m_solution_screen_grid_ptr = gtk_grid_new();
+
     m_solution_list_scrolling_ptr = gtk_scrolled_window_new(NULL, NULL);
-    m_solution_screen_board_display_frame_ptr = gtk_aspect_frame_new("", 0.5, 0.5, 1.0, gtk_false());
     m_solution_list_box_ptr = gtk_list_box_new();
-    m_solution_screen_board_grid_ptr = gtk_grid_new();
+
+    m_solution_board_frame_ptr = gtk_aspect_frame_new("", 0.5, 0.5, 1.0, gtk_false());
+    m_solution_board_overlay_ptr = gtk_overlay_new();
+    m_solution_board_grid_ptr = gtk_grid_new();
 
     // Set solution screen grid properties
     gtk_grid_set_row_spacing(GTK_GRID(m_solution_screen_grid_ptr), 5.0);
@@ -122,12 +127,15 @@ void Main_Interface::Initialize_Solution_Screen()
     gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_screen_grid_ptr), gtk_true());
     gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_screen_grid_ptr), gtk_true());
 
+    // Set solution board frame properties
+    gtk_frame_set_shadow_type(GTK_FRAME(m_solution_board_frame_ptr), GTK_SHADOW_NONE);
+    gtk_container_set_border_width(GTK_CONTAINER(m_solution_board_frame_ptr), 20.0);
+
     // Set board grid properties
-    gtk_container_set_border_width(GTK_CONTAINER(m_solution_screen_board_grid_ptr), 20);
-    gtk_grid_set_row_spacing(GTK_GRID(m_solution_screen_board_grid_ptr), 5.0);
-    gtk_grid_set_column_spacing(GTK_GRID(m_solution_screen_board_grid_ptr), 5.0);
-    gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_screen_board_grid_ptr), gtk_true());
-    gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_screen_board_grid_ptr), gtk_true());
+    gtk_grid_set_row_spacing(GTK_GRID(m_solution_board_grid_ptr), 5.0);
+    gtk_grid_set_column_spacing(GTK_GRID(m_solution_board_grid_ptr), 5.0);
+    gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_board_grid_ptr), gtk_true());
+    gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_board_grid_ptr), gtk_true());
 
     // Create font attributes
     PangoAttrList* font_attribute_list = pango_attr_list_new();
@@ -135,10 +143,10 @@ void Main_Interface::Initialize_Solution_Screen()
     pango_attr_list_insert(font_attribute_list, font_size_attribute);
 
     // Add solutions to list
-    for (uint16_t i = 0; i < solutions.size(); i++)
+    for (uint16_t i = 0; i < m_solutions.size(); i++)
     {
         GtkWidget* list_row = gtk_list_box_row_new();
-        GtkWidget* list_label = gtk_label_new(solutions[i].word.c_str());
+        GtkWidget* list_label = gtk_label_new(m_solutions[i].word.c_str());
 
         gtk_container_add(GTK_CONTAINER(list_row), list_label);
         gtk_container_add(GTK_CONTAINER(m_solution_list_box_ptr), list_row);
@@ -156,17 +164,31 @@ void Main_Interface::Initialize_Solution_Screen()
             gtk_label_set_attributes(GTK_LABEL(gtk_bin_get_child(GTK_BIN(label))), font_attribute_list);
 
             // Add label to grid
-            gtk_grid_attach(GTK_GRID(m_solution_screen_board_grid_ptr), label, x, y, 1, 1);
+            gtk_grid_attach(GTK_GRID(m_solution_board_grid_ptr), label, x, y, 1, 1);
         }
     }
 
-    // Structure containers
-    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_list_scrolling_ptr, 0, 0, 1, 1);
-    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_screen_board_display_frame_ptr, 1, 0, 2, 1);
+    // Connect row selection signal and set selected word
+    g_signal_connect(G_OBJECT(m_solution_list_box_ptr), "row-selected", G_CALLBACK(On_Solution_Select), this);
+    m_selected_solution = m_solutions.front();
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(m_solution_list_box_ptr), GTK_SELECTION_SINGLE);
 
-    gtk_container_add(GTK_CONTAINER(m_solution_screen_board_display_frame_ptr), m_solution_screen_board_grid_ptr);
-    gtk_container_add(GTK_CONTAINER(m_solution_list_scrolling_ptr), m_solution_list_box_ptr);
+    // Create drawing area
+    m_solution_board_drawing_area_ptr = gtk_drawing_area_new();
+    g_signal_connect(G_OBJECT(m_solution_board_drawing_area_ptr), "draw", G_CALLBACK(On_Solution_Path_Draw), this);
+
+    // Structure top level container
+    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_list_scrolling_ptr, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_board_frame_ptr, 1, 0, 2, 1);
     gtk_container_add(GTK_CONTAINER(m_window_ptr), m_solution_screen_grid_ptr);
+
+    // Structure solution list
+    gtk_container_add(GTK_CONTAINER(m_solution_list_scrolling_ptr), m_solution_list_box_ptr);
+
+    // Structure board display
+    gtk_overlay_add_overlay(GTK_OVERLAY(m_solution_board_overlay_ptr), m_solution_board_grid_ptr);
+    gtk_overlay_add_overlay(GTK_OVERLAY(m_solution_board_overlay_ptr), m_solution_board_drawing_area_ptr);
+    gtk_container_add(GTK_CONTAINER(m_solution_board_frame_ptr), m_solution_board_overlay_ptr);
 
     // Show new widgets
     gtk_widget_show_all(m_window_ptr);
@@ -299,4 +321,55 @@ void Main_Interface::On_Solve_Clicked(GtkWidget* self, gpointer user_data)
     interface_ptr->Destroy_Input_Screen();                      // Destroy input screen
     interface_ptr->m_solver_ptr = new Solver(interface_ptr->m_board_ptr, "../words/collins-scrabble-words-2019.txt", 3, interface_ptr->m_board_ptr->Get_Board_Size() * interface_ptr->m_board_ptr->Get_Board_Size()); // Solve board
     interface_ptr->Initialize_Solution_Screen();                                                                                                                                                                      // Start solution screen
+}
+
+void Main_Interface::On_Solution_Select(GtkListBox* self, GtkListBoxRow* row, gpointer* user_data)
+{
+    // Silence -Wunused-parameter (parameter is needed in callback signature)
+    (void)self;
+
+    // Cast pointer to interface
+    Main_Interface* interface_ptr = (Main_Interface*)user_data;
+
+    // Set selected solution
+    interface_ptr->m_selected_solution = interface_ptr->m_solutions[gtk_list_box_row_get_index(row)];
+
+    // Refresh drawing area
+    gtk_widget_queue_draw_area(interface_ptr->m_solution_board_drawing_area_ptr, 0, 0, gtk_widget_get_allocated_width(interface_ptr->m_solution_board_drawing_area_ptr),
+                               gtk_widget_get_allocated_height(interface_ptr->m_solution_board_drawing_area_ptr));
+
+    printf("%s selected\n", interface_ptr->m_selected_solution.word.c_str());
+}
+
+void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t* cairo_ptr, gpointer data)
+{
+    // Cast pointer to interface
+    Main_Interface* interface_ptr = (Main_Interface*)data;
+
+    // Get drawing area dimensions
+    uint32_t width = gtk_widget_get_allocated_width(drawing_area_ptr);
+    uint32_t height = gtk_widget_get_allocated_height(drawing_area_ptr);
+
+    // Set draw color
+    cairo_set_source_rgba(cairo_ptr, 1.0, 1.0, 1.0, 0.2);
+
+    // Set line width
+    cairo_set_line_width(cairo_ptr, 10.0);
+
+    // Go to starting position
+    uint8_t x_position = interface_ptr->m_selected_solution.x_positions[0];
+    uint8_t y_position = interface_ptr->m_selected_solution.y_positions[0];
+
+    cairo_move_to(cairo_ptr, ((double)width / 5.0) * x_position + ((double)width / 10.0), ((double)height / 5.0) * y_position + ((double)height / 10.0));
+
+    // Loop through path
+    for (uint32_t i = 1; i < interface_ptr->m_selected_solution.x_positions.size(); i++)
+    {
+        x_position = interface_ptr->m_selected_solution.x_positions[i];
+        y_position = interface_ptr->m_selected_solution.y_positions[i];
+
+        cairo_line_to(cairo_ptr, ((double)width / 5.0) * x_position + ((double)width / 10.0), ((double)height / 5.0) * y_position + ((double)height / 10.0));
+    }
+
+    cairo_stroke(cairo_ptr);
 }
