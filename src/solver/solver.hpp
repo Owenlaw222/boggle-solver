@@ -1,6 +1,5 @@
 #include "board.hpp"
 
-#include <memory>
 #include <set>
 #include <string>
 
@@ -8,7 +7,7 @@
 class Solver
 {
 private:
-    std::shared_ptr<Board> m_board_ptr;
+    Board* m_board_ptr;
 
     std::string m_word_list_path;
 
@@ -26,7 +25,7 @@ private:
     void Solve_From_Cell(unsigned int cell_x, unsigned int cell_y);
 
 public:
-    Solver(std::shared_ptr<Board> board_ptr, std::string word_list_path, int min_word_length, int max_word_length);
+    Solver(Board* board_ptr, std::string word_list_path, int min_word_length, int max_word_length);
 
 public:
     std::vector<std::pair<std::string, std::vector<std::pair<unsigned int, unsigned int>>>> Get_Solutions();

@@ -5,7 +5,7 @@
 #include <iostream>
 
 
-Solver::Solver(std::shared_ptr<Board> board_ptr, std::string word_list_path, int min_word_length, int max_word_length) : m_board_ptr(board_ptr), m_word_list_path(word_list_path), m_min_word_length(min_word_length), m_max_word_length(max_word_length)
+Solver::Solver(Board* board_ptr, std::string word_list_path, int min_word_length, int max_word_length) : m_board_ptr(board_ptr), m_word_list_path(word_list_path), m_min_word_length(min_word_length), m_max_word_length(max_word_length)
 {
     Load_Word_List();
 

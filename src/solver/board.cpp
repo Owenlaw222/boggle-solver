@@ -7,6 +7,8 @@
 
 Board::Board(unsigned int size) : m_board_size(size)
 {
+    srand(time(NULL));
+
     m_cell_values.clear();
 
     m_cell_values.resize(size);
@@ -28,8 +30,6 @@ void Board::Randomize()
     {
         case 5:
         {
-            srand(time(NULL));
-
             std::vector<std::array<std::string, 6>> die
                 = {{"U", "S", "E", "N", "S", "S"}, {"U", "O", "T", "O", "N", "W"}, {"P", "C", "E", "I", "T", "S"}, {"M", "T", "E", "T", "T", "O"}, {"G", "E", "W", "N", "E", "H"}, {"E", "C", "C", "N", "S", "T"}, {"E", "E", "E", "E", "A", "A"},
                    {"D", "N", "O", "W", "H", "H"}, {"N", "M", "E", "N", "A", "G"}, {"A", "E", "M", "E", "E", "E"}, {"E", "M", "G", "A", "U", "E"}, {"R", "L", "H", "N", "D", "O"}, {"R", "I", "S", "P", "Y", "Y"}, {"F", "S", "I", "R", "A", "A"},
@@ -50,8 +50,6 @@ void Board::Randomize()
         default:
         {
             char letters[26] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'};
-
-            srand(time(NULL));
 
             for (unsigned int i = 0; i < m_board_size; i++)
             {
