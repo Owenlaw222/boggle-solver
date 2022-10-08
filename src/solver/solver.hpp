@@ -23,9 +23,6 @@ private:
     std::set<std::string> m_found_words;
     std::vector<Solution> m_solutions;
 
-    int m_min_word_length;
-    int m_max_word_length;
-
 private:
     void Load_Word_List();
 
@@ -33,7 +30,7 @@ private:
     void Solve_From_Cell(unsigned int cell_x, unsigned int cell_y);
 
 public:
-    Solver(Board* board_ptr, std::string word_list_path, int min_word_length, int max_word_length);
+    Solver(Board* board_ptr, std::string word_list_path);
 
 public:
     std::vector<Solution> Get_Solutions();

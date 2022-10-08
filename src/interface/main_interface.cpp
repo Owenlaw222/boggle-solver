@@ -107,6 +107,47 @@ void Main_Interface::Initialize_Solution_Screen()
     // Get vector of solutions
     m_solutions = m_solver_ptr->Get_Solutions();
 
+    // Replace 1, 2, 3, 4, 5, 6 with QU, IN, TH, ER, HE, AN
+    for (uint32_t i = 0; i < m_solutions.size(); i++)
+    {
+        std::string::size_type n = 0;
+        while ((n = m_solutions[i].word.find('1', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "QU");
+            n += 2;
+        }
+        n = 0;
+        while ((n = m_solutions[i].word.find('2', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "IN");
+            n += 2;
+        }
+        n = 0;
+        while ((n = m_solutions[i].word.find('3', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "TH");
+            n += 2;
+        }
+        n = 0;
+        while ((n = m_solutions[i].word.find('4', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "ER");
+            n += 2;
+        }
+        n = 0;
+        while ((n = m_solutions[i].word.find('5', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "HE");
+            n += 2;
+        }
+        n = 0;
+        while ((n = m_solutions[i].word.find('6', n)) != std::string::npos)
+        {
+            m_solutions[i].word.replace(n, 1, "AN");
+            n += 2;
+        }
+    }
+
     // Sort alphabetically and then by length so that solutions of equal length are alphabetical
     std::sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word < b.word; });
     std::stable_sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });
@@ -157,8 +198,16 @@ void Main_Interface::Initialize_Solution_Screen()
     {
         for (uint8_t y = 0; y < m_board_ptr->Get_Board_Size(); y++)
         {
+            std::string die_value = m_board_ptr->Get_Board_Cell(x, y);
+            die_value = (die_value == "1") ? "Qu" : die_value;
+            die_value = (die_value == "2") ? "In" : die_value;
+            die_value = (die_value == "3") ? "Th" : die_value;
+            die_value = (die_value == "4") ? "Er" : die_value;
+            die_value = (die_value == "5") ? "He" : die_value;
+            die_value = (die_value == "6") ? "An" : die_value;
+
             // Create label (using a button so that it has a border)
-            GtkWidget* label = gtk_button_new_with_label(m_board_ptr->Get_Board_Cell(x, y).c_str());
+            GtkWidget* label = gtk_button_new_with_label(die_value.c_str());
 
             // Set label properties
             gtk_label_set_attributes(GTK_LABEL(gtk_bin_get_child(GTK_BIN(label))), font_attribute_list);
@@ -209,8 +258,7 @@ bool Main_Interface::Is_String_Valid(const char* input, uint8_t board_size)
 {
     if (board_size == 4)
     {
-        // const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "Z", "Y", "Z", "QU"};
-        const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Q"};
+        const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1"};
 
         for (uint8_t i = 0; i < 26; i++)
         {
@@ -222,8 +270,7 @@ bool Main_Interface::Is_String_Valid(const char* input, uint8_t board_size)
     }
     else
     {
-        // const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "QU", "IN", "TH", "ER", "HE", "AN"};
-        const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "Q", "I", "T", "E", "H", "A"};
+        const char* valid_strings[] = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "1", "2", "3", "4", "5", "6"};
 
         for (uint8_t i = 0; i < 31; i++)
         {
@@ -261,17 +308,31 @@ void Main_Interface::On_Input_Changed(GtkWidget* self, gpointer user_data)
     // Convert input text to upper case
     std::transform(input_text.begin(), input_text.end(), input_text.begin(), ::toupper);
 
+    input_text = (input_text == "QU") ? "1" : input_text;
+    input_text = (input_text == "IN") ? "2" : input_text;
+    input_text = (input_text == "TH") ? "3" : input_text;
+    input_text = (input_text == "ER") ? "4" : input_text;
+    input_text = (input_text == "HE") ? "5" : input_text;
+    input_text = (input_text == "AN") ? "6" : input_text;
+
     // Remove added letter if it is not valid
     if (!Is_String_Valid(input_text.c_str(), input_box_callback_data_ptr->interface->m_board_ptr->Get_Board_Size()) && input_text != "" && input_text != "Q")
     {
         input_text.pop_back();
     }
 
-    // Update text with processed text
-    gtk_entry_set_text(GTK_ENTRY(self), input_text.c_str());
-
     // Set board cell to text
     input_box_callback_data_ptr->interface->m_board_ptr->Set_Board_Cell(input_box_callback_data_ptr->x_position, input_box_callback_data_ptr->y_position, input_text);
+
+    // Update text with processed text
+    input_text = (input_text == "1") ? "Qu" : input_text;
+    input_text = (input_text == "2") ? "In" : input_text;
+    input_text = (input_text == "3") ? "Th" : input_text;
+    input_text = (input_text == "4") ? "Er" : input_text;
+    input_text = (input_text == "5") ? "He" : input_text;
+    input_text = (input_text == "6") ? "An" : input_text;
+
+    gtk_entry_set_text(GTK_ENTRY(self), input_text.c_str());
 
     // Enable / disable solve button
     Check_Inputs(input_box_callback_data_ptr->interface);
@@ -304,7 +365,6 @@ void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
         for (uint8_t y = 0; y < interface_ptr->m_board_ptr->Get_Board_Size(); y++)
         {
             std::string cell_value = interface_ptr->m_board_ptr->Get_Board_Cell(x, y);
-
             gtk_entry_set_text(GTK_ENTRY(interface_ptr->m_entry_box_ptrs[x][y]), cell_value.c_str());
         }
     }
@@ -316,11 +376,11 @@ void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
 
 void Main_Interface::On_Solve_Clicked(GtkWidget* self, gpointer user_data)
 {
-    (void)self;                                                 // Silence -Wunused-parameter (parameter is needed in callback signature)
-    Main_Interface* interface_ptr = (Main_Interface*)user_data; // Cast pointer to interface
-    interface_ptr->Destroy_Input_Screen();                      // Destroy input screen
-    interface_ptr->m_solver_ptr = new Solver(interface_ptr->m_board_ptr, "../words/collins-scrabble-words-2019.txt", 3, interface_ptr->m_board_ptr->Get_Board_Size() * interface_ptr->m_board_ptr->Get_Board_Size()); // Solve board
-    interface_ptr->Initialize_Solution_Screen();                                                                                                                                                                      // Start solution screen
+    (void)self;                                                                                                                 // Silence -Wunused-parameter (parameter is needed in callback signature)
+    Main_Interface* interface_ptr = (Main_Interface*)user_data;                                                                 // Cast pointer to interface
+    interface_ptr->Destroy_Input_Screen();                                                                                      // Destroy input screen
+    interface_ptr->m_solver_ptr = new Solver(interface_ptr->m_board_ptr, "../words/processed-collins-scrabble-words-2019.txt"); // Solve board
+    interface_ptr->Initialize_Solution_Screen();                                                                                // Start solution screen
 }
 
 void Main_Interface::On_Solution_Select(GtkListBox* self, GtkListBoxRow* row, gpointer* user_data)

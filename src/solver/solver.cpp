@@ -4,8 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-
-Solver::Solver(Board* board_ptr, std::string word_list_path, int min_word_length, int max_word_length) : m_board_ptr(board_ptr), m_word_list_path(word_list_path), m_min_word_length(min_word_length), m_max_word_length(max_word_length)
+Solver::Solver(Board* board_ptr, std::string word_list_path) : m_board_ptr(board_ptr), m_word_list_path(word_list_path)
 {
     Load_Word_List();
 
@@ -124,7 +123,7 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
 
     while (direction_stack[0] != 8)
     {
-        if ((int)current_word.size() == m_max_word_length || direction_stack.back() == 8)
+        if (direction_stack.back() == 8)
         {
             cells_visited[current_x][current_y] = false;
 
@@ -169,7 +168,7 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
             direction_stack.push_back(0);
             search_range_stack.push_back(range);
 
-            if ((int)current_word.size() >= m_min_word_length && m_found_words.find(current_word) == m_found_words.end())
+            if (m_found_words.find(current_word) == m_found_words.end())
             {
                 for (int i = range.first; i <= range.second; i++)
                 {
