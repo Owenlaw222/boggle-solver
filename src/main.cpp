@@ -3,10 +3,9 @@
 #include <cstring>
 #include <iostream>
 
-
 int main(int argc, char* argv[])
 {
-    Board board(5);
+    Board board(4);
     Main_Interface main_interface(&argc, &argv, &board);
 
     return 0;

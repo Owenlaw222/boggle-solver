@@ -148,6 +148,15 @@ void Main_Interface::Initialize_Solution_Screen()
         }
     }
 
+    // Remove solutions of length 2 or less
+    for (int32_t i = m_solutions.size() - 1; i >= 0; i--)
+    {
+        if (m_solutions[i].word.length() <= 2)
+        {
+            m_solutions.erase(m_solutions.begin() + i);
+        }
+    }
+
     // Sort alphabetically and then by length so that solutions of equal length are alphabetical
     std::sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word < b.word; });
     std::stable_sort(m_solutions.begin(), m_solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });

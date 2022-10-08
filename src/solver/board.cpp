@@ -28,6 +28,32 @@ void Board::Randomize()
 {
     switch (m_board_size)
     {
+        case 4:
+        {
+            //  1. A E A N E G      9. W N G E E H
+            //  2. A H S P C O     10. L N H N R Z
+            //  3. A S P F F K     11. T S T I Y D
+            //  4. O B J O A B     12. O W T O A T
+            //  5. I O T M U C     13. E R T T Y L
+            //  6. R Y V D E L     14. T O E S S I
+            //  7. L R E I X D     15. T E R W H V
+            //  8. E I U N E S     16. N U I H M Qu
+
+            std::vector<std::array<std::string, 6>> die = {{"A", "E", "A", "N", "E", "G"}, {"A", "H", "S", "P", "C", "O"}, {"A", "S", "P", "F", "F", "K"}, {"O", "B", "J", "O", "A", "B"}, {"I", "O", "T", "M", "U", "C"}, {"R", "Y", "V", "D", "E", "L"},
+                                                           {"L", "R", "E", "I", "X", "D"}, {"E", "I", "U", "N", "E", "S"}, {"W", "N", "G", "E", "E", "H"}, {"L", "N", "H", "N", "R", "Z"}, {"T", "S", "T", "I", "Y", "D"}, {"O", "W", "T", "O", "A", "T"},
+                                                           {"E", "R", "T", "T", "Y", "L"}, {"T", "O", "E", "S", "S", "I"}, {"T", "E", "R", "W", "H", "V"}, {"N", "U", "I", "H", "M", "1"}};
+
+            std::random_shuffle(die.begin(), die.end());
+
+            for (unsigned int i = 0; i < m_board_size; i++)
+            {
+                for (unsigned int j = 0; j < m_board_size; j++)
+                {
+                    m_cell_values[i][j] = die[i * 4 + j][rand() % 6];
+                }
+            }
+            break;
+        }
         case 5:
         {
             std::vector<std::array<std::string, 6>> die
@@ -49,7 +75,7 @@ void Board::Randomize()
         }
         default:
         {
-            char letters[26] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1'};
+            char letters[31] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '1', '2', '3', '4', '5', '6'};
 
             for (unsigned int i = 0; i < m_board_size; i++)
             {
