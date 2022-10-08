@@ -30,8 +30,11 @@ private:
     std::vector<std::vector<GtkWidget*>> m_entry_box_ptrs;
 
     // Solution screen widgets
-    GtkWidget* m_solution_list_scrolling;
+    GtkWidget* m_solution_screen_grid_ptr;
+    GtkWidget* m_solution_list_scrolling_ptr;
+    GtkWidget* m_solution_screen_board_display_frame_ptr;
     GtkWidget* m_solution_list_box_ptr;
+    GtkWidget* m_solution_screen_board_grid_ptr;
 
 private:
     void Initialize_Window();

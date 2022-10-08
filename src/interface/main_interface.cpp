@@ -110,8 +110,29 @@ void Main_Interface::Initialize_Solution_Screen()
     std::stable_sort(solutions.begin(), solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });
 
     // Create containers
-    m_solution_list_scrolling = gtk_scrolled_window_new(NULL, NULL);
+    m_solution_screen_grid_ptr = gtk_grid_new();
+    m_solution_list_scrolling_ptr = gtk_scrolled_window_new(NULL, NULL);
+    m_solution_screen_board_display_frame_ptr = gtk_aspect_frame_new("", 0.5, 0.5, 1.0, gtk_false());
     m_solution_list_box_ptr = gtk_list_box_new();
+    m_solution_screen_board_grid_ptr = gtk_grid_new();
+
+    // Set solution screen grid properties
+    gtk_grid_set_row_spacing(GTK_GRID(m_solution_screen_grid_ptr), 5.0);
+    gtk_grid_set_column_spacing(GTK_GRID(m_solution_screen_grid_ptr), 5.0);
+    gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_screen_grid_ptr), gtk_true());
+    gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_screen_grid_ptr), gtk_true());
+
+    // Set board grid properties
+    gtk_container_set_border_width(GTK_CONTAINER(m_solution_screen_board_grid_ptr), 20);
+    gtk_grid_set_row_spacing(GTK_GRID(m_solution_screen_board_grid_ptr), 5.0);
+    gtk_grid_set_column_spacing(GTK_GRID(m_solution_screen_board_grid_ptr), 5.0);
+    gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_screen_board_grid_ptr), gtk_true());
+    gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_screen_board_grid_ptr), gtk_true());
+
+    // Create font attributes
+    PangoAttrList* font_attribute_list = pango_attr_list_new();
+    PangoAttribute* font_size_attribute = pango_attr_size_new_absolute(PANGO_SCALE * 40.0);
+    pango_attr_list_insert(font_attribute_list, font_size_attribute);
 
     // Add solutions to list
     for (uint16_t i = 0; i < solutions.size(); i++)
@@ -123,9 +144,29 @@ void Main_Interface::Initialize_Solution_Screen()
         gtk_container_add(GTK_CONTAINER(m_solution_list_box_ptr), list_row);
     }
 
+    // Create board display
+    for (uint8_t x = 0; x < m_board_ptr->Get_Board_Size(); x++)
+    {
+        for (uint8_t y = 0; y < m_board_ptr->Get_Board_Size(); y++)
+        {
+            // Create label (using a button so that it has a border)
+            GtkWidget* label = gtk_button_new_with_label(m_board_ptr->Get_Board_Cell(x, y).c_str());
+
+            // Set label properties
+            gtk_label_set_attributes(GTK_LABEL(gtk_bin_get_child(GTK_BIN(label))), font_attribute_list);
+
+            // Add label to grid
+            gtk_grid_attach(GTK_GRID(m_solution_screen_board_grid_ptr), label, x, y, 1, 1);
+        }
+    }
+
     // Structure containers
-    gtk_container_add(GTK_CONTAINER(m_solution_list_scrolling), m_solution_list_box_ptr);
-    gtk_container_add(GTK_CONTAINER(m_window_ptr), m_solution_list_scrolling);
+    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_list_scrolling_ptr, 0, 0, 1, 1);
+    gtk_grid_attach(GTK_GRID(m_solution_screen_grid_ptr), m_solution_screen_board_display_frame_ptr, 1, 0, 2, 1);
+
+    gtk_container_add(GTK_CONTAINER(m_solution_screen_board_display_frame_ptr), m_solution_screen_board_grid_ptr);
+    gtk_container_add(GTK_CONTAINER(m_solution_list_scrolling_ptr), m_solution_list_box_ptr);
+    gtk_container_add(GTK_CONTAINER(m_window_ptr), m_solution_screen_grid_ptr);
 
     // Show new widgets
     gtk_widget_show_all(m_window_ptr);
