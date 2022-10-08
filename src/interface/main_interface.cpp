@@ -337,8 +337,6 @@ void Main_Interface::On_Solution_Select(GtkListBox* self, GtkListBoxRow* row, gp
     // Refresh drawing area
     gtk_widget_queue_draw_area(interface_ptr->m_solution_board_drawing_area_ptr, 0, 0, gtk_widget_get_allocated_width(interface_ptr->m_solution_board_drawing_area_ptr),
                                gtk_widget_get_allocated_height(interface_ptr->m_solution_board_drawing_area_ptr));
-
-    printf("%s selected\n", interface_ptr->m_selected_solution.word.c_str());
 }
 
 void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t* cairo_ptr, gpointer data)
@@ -360,7 +358,8 @@ void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t*
     uint8_t x_position = interface_ptr->m_selected_solution.x_positions[0];
     uint8_t y_position = interface_ptr->m_selected_solution.y_positions[0];
 
-    cairo_move_to(cairo_ptr, ((double)width / 5.0) * x_position + ((double)width / 10.0), ((double)height / 5.0) * y_position + ((double)height / 10.0));
+    cairo_move_to(cairo_ptr, ((double)width / interface_ptr->m_board_ptr->Get_Board_Size()) * x_position + ((double)width / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0),
+                  ((double)height / interface_ptr->m_board_ptr->Get_Board_Size()) * y_position + ((double)height / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0));
 
     // Loop through path
     for (uint32_t i = 1; i < interface_ptr->m_selected_solution.x_positions.size(); i++)
@@ -368,7 +367,8 @@ void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t*
         x_position = interface_ptr->m_selected_solution.x_positions[i];
         y_position = interface_ptr->m_selected_solution.y_positions[i];
 
-        cairo_line_to(cairo_ptr, ((double)width / 5.0) * x_position + ((double)width / 10.0), ((double)height / 5.0) * y_position + ((double)height / 10.0));
+        cairo_line_to(cairo_ptr, ((double)width / interface_ptr->m_board_ptr->Get_Board_Size()) * x_position + ((double)width / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0),
+                      ((double)height / interface_ptr->m_board_ptr->Get_Board_Size()) * y_position + ((double)height / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0));
     }
 
     cairo_stroke(cairo_ptr);
