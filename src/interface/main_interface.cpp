@@ -83,6 +83,7 @@ void Main_Interface::Initialize_Input_Screen()
 
             // Setup changed and destroyed callbacks
             g_signal_connect(GTK_EDITABLE(m_entry_box_ptrs[x][y]), "changed", G_CALLBACK(On_Input_Changed), (gpointer)input_box_callback_data_ptr);
+            g_signal_connect(m_entry_box_ptrs[x][y], "destroy", G_CALLBACK(On_Input_Box_Destroy), (gpointer)input_box_callback_data_ptr);
         }
     }
 
@@ -90,12 +91,55 @@ void Main_Interface::Initialize_Input_Screen()
     gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_randomize_button_ptr, 0, m_board_ptr->Get_Board_Size() * 2, m_board_ptr->Get_Board_Size() * 2, 1);
     gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_solve_button_ptr, 0, m_board_ptr->Get_Board_Size() * 2 + 1, m_board_ptr->Get_Board_Size() * 2, 1);
 
-    // Setup randomize callback
+    // Setup randomize and solved button callbacks
     g_signal_connect(m_randomize_button_ptr, "clicked", G_CALLBACK(On_Randomized_Clicked), this);
+    g_signal_connect(m_solve_button_ptr, "clicked", G_CALLBACK(On_Solve_Clicked), this);
 
     // Add grid to frame and the frame to the window
     gtk_container_add(GTK_CONTAINER(m_input_screen_frame_ptr), m_input_grid_ptr);
     gtk_container_add(GTK_CONTAINER(m_window_ptr), m_input_screen_frame_ptr);
+}
+
+void Main_Interface::Initialize_Solution_Screen()
+{
+    // Get vector of solutions
+    std::vector<Solver::Solution> solutions = m_solver_ptr->Get_Solutions();
+
+    // Sort alphabetically and then by length so that solutions of equal length are alphabetical
+    std::sort(solutions.begin(), solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word < b.word; });
+    std::stable_sort(solutions.begin(), solutions.end(), [](Solver::Solution a, Solver::Solution b) { return a.word.size() > b.word.size(); });
+
+    // Create containers
+    m_solution_list_scrolling = gtk_scrolled_window_new(NULL, NULL);
+    m_solution_list_box_ptr = gtk_list_box_new();
+
+    // Add solutions to list
+    for (uint16_t i = 0; i < solutions.size(); i++)
+    {
+        GtkWidget* list_row = gtk_list_box_row_new();
+        GtkWidget* list_label = gtk_label_new(solutions[i].word.c_str());
+
+        gtk_container_add(GTK_CONTAINER(list_row), list_label);
+        gtk_container_add(GTK_CONTAINER(m_solution_list_box_ptr), list_row);
+    }
+
+    // Structure containers
+    gtk_container_add(GTK_CONTAINER(m_solution_list_scrolling), m_solution_list_box_ptr);
+    gtk_container_add(GTK_CONTAINER(m_window_ptr), m_solution_list_scrolling);
+
+    // Show new widgets
+    gtk_widget_show_all(m_window_ptr);
+}
+
+void Main_Interface::Destroy_Input_Screen()
+{
+    gtk_widget_destroy(m_input_screen_frame_ptr);
+
+    m_input_screen_frame_ptr = nullptr;
+    m_input_grid_ptr = nullptr;
+    m_randomize_button_ptr = nullptr;
+    m_solve_button_ptr = nullptr;
+    m_entry_box_ptrs.clear();
 }
 
 bool Main_Interface::Is_String_Valid(const char* input, uint8_t board_size)
@@ -171,6 +215,15 @@ void Main_Interface::On_Input_Changed(GtkWidget* self, gpointer user_data)
     gtk_widget_set_sensitive(input_box_callback_data_ptr->interface->m_solve_button_ptr, (gboolean)input_box_callback_data_ptr->interface->m_are_inputs_valid);
 }
 
+void Main_Interface::On_Input_Box_Destroy(GtkWidget* self, gpointer user_data)
+{
+    // Silence -Wunused-parameter (parameter is needed in callback signature)
+    (void)self;
+
+    // Free Input_Box_Callback_Data structure
+    free((void*)user_data);
+}
+
 void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
 {
     // Silence -Wunused-parameter (parameter is needed in callback signature)
@@ -196,4 +249,13 @@ void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
     // Enable / disable solve button
     Check_Inputs(interface_ptr);
     gtk_widget_set_sensitive(interface_ptr->m_solve_button_ptr, (gboolean)interface_ptr->m_are_inputs_valid);
+}
+
+void Main_Interface::On_Solve_Clicked(GtkWidget* self, gpointer user_data)
+{
+    (void)self;                                                 // Silence -Wunused-parameter (parameter is needed in callback signature)
+    Main_Interface* interface_ptr = (Main_Interface*)user_data; // Cast pointer to interface
+    interface_ptr->Destroy_Input_Screen();                      // Destroy input screen
+    interface_ptr->m_solver_ptr = new Solver(interface_ptr->m_board_ptr, "../words/collins-scrabble-words-2019.txt", 3, interface_ptr->m_board_ptr->Get_Board_Size() * interface_ptr->m_board_ptr->Get_Board_Size()); // Solve board
+    interface_ptr->Initialize_Solution_Screen();                                                                                                                                                                      // Start solution screen
 }

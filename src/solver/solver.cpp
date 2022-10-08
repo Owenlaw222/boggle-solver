@@ -177,13 +177,18 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
                     {
                         m_found_words.insert(current_word);
 
-                        std::vector<std::pair<unsigned int, unsigned int>> path = {{cell_x, cell_y}};
+                        Solution solution = {};
+                        solution.word = current_word;
+                        solution.x_positions.push_back(cell_x);
+                        solution.y_positions.push_back(cell_y);
+
                         for (unsigned int i = 0; i < direction_stack.size() - 1; i++)
                         {
-                            path.push_back({path.back().first + offsets[direction_stack[i]].first, path.back().second + offsets[direction_stack[i]].second});
+                            solution.x_positions.push_back(solution.x_positions.back() + offsets[direction_stack[i]].first);
+                            solution.y_positions.push_back(solution.y_positions.back() + offsets[direction_stack[i]].second);
                         }
 
-                        m_solutions.push_back({current_word, path});
+                        m_solutions.push_back(solution);
                         break;
                     }
                 }
@@ -192,7 +197,7 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
     }
 }
 
-std::vector<std::pair<std::string, std::vector<std::pair<unsigned int, unsigned int>>>> Solver::Get_Solutions()
+std::vector<Solver::Solution> Solver::Get_Solutions()
 {
     return m_solutions;
 }
