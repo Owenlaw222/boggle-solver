@@ -187,10 +187,10 @@ void Main_Interface::Initialize_Solution_Screen()
     gtk_grid_set_row_homogeneous(GTK_GRID(m_solution_board_grid_ptr), gtk_true());
     gtk_grid_set_column_homogeneous(GTK_GRID(m_solution_board_grid_ptr), gtk_true());
 
-    // Create font attributes
-    PangoAttrList* font_attribute_list = pango_attr_list_new();
-    PangoAttribute* font_size_attribute = pango_attr_size_new_absolute(PANGO_SCALE * 40.0);
-    pango_attr_list_insert(font_attribute_list, font_size_attribute);
+    // Connect row selection signal and set selected word
+    g_signal_connect(G_OBJECT(m_solution_list_box_ptr), "row-selected", G_CALLBACK(On_Solution_Select), this);
+    m_selected_solution = m_solutions.front();
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(m_solution_list_box_ptr), GTK_SELECTION_SINGLE);
 
     // Add solutions to list
     for (uint16_t i = 0; i < m_solutions.size(); i++)
@@ -201,6 +201,11 @@ void Main_Interface::Initialize_Solution_Screen()
         gtk_container_add(GTK_CONTAINER(list_row), list_label);
         gtk_container_add(GTK_CONTAINER(m_solution_list_box_ptr), list_row);
     }
+
+    // Create font attributes
+    PangoAttrList* font_attribute_list = pango_attr_list_new();
+    PangoAttribute* font_size_attribute = pango_attr_size_new_absolute(PANGO_SCALE * 40.0);
+    pango_attr_list_insert(font_attribute_list, font_size_attribute);
 
     // Create board display
     for (uint8_t x = 0; x < m_board_ptr->Get_Board_Size(); x++)
@@ -220,16 +225,12 @@ void Main_Interface::Initialize_Solution_Screen()
 
             // Set label properties
             gtk_label_set_attributes(GTK_LABEL(gtk_bin_get_child(GTK_BIN(label))), font_attribute_list);
+            gtk_widget_set_can_focus(label, gtk_false());
 
             // Add label to grid
             gtk_grid_attach(GTK_GRID(m_solution_board_grid_ptr), label, x, y, 1, 1);
         }
     }
-
-    // Connect row selection signal and set selected word
-    g_signal_connect(G_OBJECT(m_solution_list_box_ptr), "row-selected", G_CALLBACK(On_Solution_Select), this);
-    m_selected_solution = m_solutions.front();
-    gtk_list_box_set_selection_mode(GTK_LIST_BOX(m_solution_list_box_ptr), GTK_SELECTION_SINGLE);
 
     // Create drawing area
     m_solution_board_drawing_area_ptr = gtk_drawing_area_new();
@@ -247,6 +248,9 @@ void Main_Interface::Initialize_Solution_Screen()
     gtk_overlay_add_overlay(GTK_OVERLAY(m_solution_board_overlay_ptr), m_solution_board_grid_ptr);
     gtk_overlay_add_overlay(GTK_OVERLAY(m_solution_board_overlay_ptr), m_solution_board_drawing_area_ptr);
     gtk_container_add(GTK_CONTAINER(m_solution_board_frame_ptr), m_solution_board_overlay_ptr);
+
+    // Select first solution
+    g_signal_emit_by_name(G_OBJECT(gtk_list_box_get_row_at_index(GTK_LIST_BOX(m_solution_list_box_ptr), 0)), "activate", this);
 
     // Show new widgets
     gtk_widget_show_all(m_window_ptr);

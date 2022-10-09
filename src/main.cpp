@@ -5,7 +5,7 @@
 
 int main(int argc, char* argv[])
 {
-    Board board(4);
+    Board board(5);
     Main_Interface main_interface(&argc, &argv, &board);
 
     return 0;
