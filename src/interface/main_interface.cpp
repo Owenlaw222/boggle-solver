@@ -4,7 +4,7 @@
 #include <iostream>
 #include <string>
 
-Main_Interface::Main_Interface(int* argc, char*** argv, Board* board_ptr) : m_board_ptr(board_ptr)
+Main_Interface::Main_Interface(int* argc, char*** argv, Board** board_ptr) : m_board_ptr(board_ptr)
 {
     // Initialize GTK
     gtk_init(argc, argv);
@@ -38,8 +38,10 @@ void Main_Interface::Initialize_Window()
 void Main_Interface::Initialize_Input_Screen()
 {
     // Create widgets
-    m_input_screen_frame_ptr = gtk_aspect_frame_new("", 0.5, 0.5, (double)m_board_ptr->Get_Board_Size() / (double)(m_board_ptr->Get_Board_Size() + 1), gtk_false());
+    m_input_screen_frame_ptr = gtk_aspect_frame_new("", 0.5, 0.5, (double)(*m_board_ptr)->Get_Board_Size() / (double)((*m_board_ptr)->Get_Board_Size() + 1.5), gtk_false());
     m_input_grid_ptr = gtk_grid_new();
+    m_board_size_4x4_button_ptr = gtk_toggle_button_new_with_label("4x4");
+    m_board_size_5x5_button_ptr = gtk_toggle_button_new_with_label("5x5");
     m_randomize_button_ptr = gtk_button_new_with_label("Randomize!");
     m_solve_button_ptr = gtk_button_new_with_label("Solve!");
 
@@ -62,11 +64,11 @@ void Main_Interface::Initialize_Input_Screen()
     pango_attr_list_insert(font_attribute_list, font_size_attribute);
 
     // Add text input boxes to grid
-    m_entry_box_ptrs.resize(m_board_ptr->Get_Board_Size());
-    for (uint8_t x = 0; x < m_board_ptr->Get_Board_Size(); x++)
+    m_entry_box_ptrs.resize((*m_board_ptr)->Get_Board_Size());
+    for (uint8_t x = 0; x < (*m_board_ptr)->Get_Board_Size(); x++)
     {
-        m_entry_box_ptrs[x].resize(m_board_ptr->Get_Board_Size());
-        for (uint8_t y = 0; y < m_board_ptr->Get_Board_Size(); y++)
+        m_entry_box_ptrs[x].resize((*m_board_ptr)->Get_Board_Size());
+        for (uint8_t y = 0; y < (*m_board_ptr)->Get_Board_Size(); y++)
         {
             // Create entry box
             m_entry_box_ptrs[x][y] = gtk_entry_new();
@@ -89,17 +91,37 @@ void Main_Interface::Initialize_Input_Screen()
         }
     }
 
-    // Add randomize and solve button to grid
-    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_randomize_button_ptr, 0, m_board_ptr->Get_Board_Size() * 2, m_board_ptr->Get_Board_Size() * 2, 1);
-    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_solve_button_ptr, 0, m_board_ptr->Get_Board_Size() * 2 + 1, m_board_ptr->Get_Board_Size() * 2, 1);
+    // Activate size button
+    m_is_4x4 = (*m_board_ptr)->Get_Board_Size() == 4;
+    if (m_is_4x4)
+    {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(m_board_size_4x4_button_ptr), gtk_true());
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(m_board_size_5x5_button_ptr), gtk_false());
+    }
+    else
+    {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(m_board_size_5x5_button_ptr), gtk_true());
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(m_board_size_4x4_button_ptr), gtk_false());
+    }
 
-    // Setup randomize and solved button callbacks
+    // Add buttons to grid
+    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_board_size_4x4_button_ptr, 0, (*m_board_ptr)->Get_Board_Size() * 2, (*m_board_ptr)->Get_Board_Size(), 1);
+    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_board_size_5x5_button_ptr, (*m_board_ptr)->Get_Board_Size(), (*m_board_ptr)->Get_Board_Size() * 2, (*m_board_ptr)->Get_Board_Size(), 1);
+    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_randomize_button_ptr, 0, (*m_board_ptr)->Get_Board_Size() * 2 + 1, (*m_board_ptr)->Get_Board_Size() * 2, 1);
+    gtk_grid_attach(GTK_GRID(m_input_grid_ptr), m_solve_button_ptr, 0, (*m_board_ptr)->Get_Board_Size() * 2 + 2, (*m_board_ptr)->Get_Board_Size() * 2, 1);
+
+    // Setup button callbacks
+    g_signal_connect(m_board_size_4x4_button_ptr, "clicked", G_CALLBACK(On_4x4_Clicked), this);
+    g_signal_connect(m_board_size_5x5_button_ptr, "clicked", G_CALLBACK(On_5x5_Clicked), this);
     g_signal_connect(m_randomize_button_ptr, "clicked", G_CALLBACK(On_Randomized_Clicked), this);
     g_signal_connect(m_solve_button_ptr, "clicked", G_CALLBACK(On_Solve_Clicked), this);
 
     // Add grid to frame and the frame to the window
     gtk_container_add(GTK_CONTAINER(m_input_screen_frame_ptr), m_input_grid_ptr);
     gtk_container_add(GTK_CONTAINER(m_window_ptr), m_input_screen_frame_ptr);
+
+    // Show all elements
+    gtk_widget_show_all(m_window_ptr);
 }
 
 void Main_Interface::Initialize_Solution_Screen()
@@ -208,11 +230,11 @@ void Main_Interface::Initialize_Solution_Screen()
     pango_attr_list_insert(font_attribute_list, font_size_attribute);
 
     // Create board display
-    for (uint8_t x = 0; x < m_board_ptr->Get_Board_Size(); x++)
+    for (uint8_t x = 0; x < (*m_board_ptr)->Get_Board_Size(); x++)
     {
-        for (uint8_t y = 0; y < m_board_ptr->Get_Board_Size(); y++)
+        for (uint8_t y = 0; y < (*m_board_ptr)->Get_Board_Size(); y++)
         {
-            std::string die_value = m_board_ptr->Get_Board_Cell(x, y);
+            std::string die_value = (*m_board_ptr)->Get_Board_Cell(x, y);
             die_value = (die_value == "1") ? "Qu" : die_value;
             die_value = (die_value == "2") ? "In" : die_value;
             die_value = (die_value == "3") ? "Th" : die_value;
@@ -262,6 +284,8 @@ void Main_Interface::Destroy_Input_Screen()
 
     m_input_screen_frame_ptr = nullptr;
     m_input_grid_ptr = nullptr;
+    m_board_size_4x4_button_ptr = nullptr;
+    m_board_size_5x5_button_ptr = nullptr;
     m_randomize_button_ptr = nullptr;
     m_solve_button_ptr = nullptr;
     m_entry_box_ptrs.clear();
@@ -297,17 +321,17 @@ bool Main_Interface::Is_String_Valid(const char* input, uint8_t board_size)
     return false;
 }
 
-void Main_Interface::Check_Inputs(Main_Interface* interface)
+void Main_Interface::Check_Inputs()
 {
-    interface->m_are_inputs_valid = true;
+    m_are_inputs_valid = true;
 
     // Loop through cells
-    for (uint8_t x = 0; x < interface->m_board_ptr->Get_Board_Size(); x++)
+    for (uint8_t x = 0; x < (*m_board_ptr)->Get_Board_Size(); x++)
     {
-        for (uint8_t y = 0; y < interface->m_board_ptr->Get_Board_Size(); y++)
+        for (uint8_t y = 0; y < (*m_board_ptr)->Get_Board_Size(); y++)
         {
             // Test whether or not the input at cell x, y is valid
-            interface->m_are_inputs_valid &= Is_String_Valid(interface->m_board_ptr->Get_Board_Cell(x, y).c_str(), interface->m_board_ptr->Get_Board_Size());
+            m_are_inputs_valid &= Is_String_Valid((*m_board_ptr)->Get_Board_Cell(x, y).c_str(), (*m_board_ptr)->Get_Board_Size());
         }
     }
 }
@@ -329,13 +353,13 @@ void Main_Interface::On_Input_Changed(GtkWidget* self, gpointer user_data)
     input_text = (input_text == "AN") ? "6" : input_text;
 
     // Remove added letter if it is not valid
-    if (!Is_String_Valid(input_text.c_str(), input_box_callback_data_ptr->interface->m_board_ptr->Get_Board_Size()) && input_text != "" && input_text != "Q")
+    if (!Is_String_Valid(input_text.c_str(), (*input_box_callback_data_ptr->interface->m_board_ptr)->Get_Board_Size()) && input_text != "" && input_text != "Q")
     {
         input_text.pop_back();
     }
 
     // Set board cell to text
-    input_box_callback_data_ptr->interface->m_board_ptr->Set_Board_Cell(input_box_callback_data_ptr->x_position, input_box_callback_data_ptr->y_position, input_text);
+    (*input_box_callback_data_ptr->interface->m_board_ptr)->Set_Board_Cell(input_box_callback_data_ptr->x_position, input_box_callback_data_ptr->y_position, input_text);
 
     // Update text with processed text
     input_text = (input_text == "1") ? "Qu" : input_text;
@@ -348,7 +372,7 @@ void Main_Interface::On_Input_Changed(GtkWidget* self, gpointer user_data)
     gtk_entry_set_text(GTK_ENTRY(self), input_text.c_str());
 
     // Enable / disable solve button
-    Check_Inputs(input_box_callback_data_ptr->interface);
+    input_box_callback_data_ptr->interface->Check_Inputs();
     gtk_widget_set_sensitive(input_box_callback_data_ptr->interface->m_solve_button_ptr, (gboolean)input_box_callback_data_ptr->interface->m_are_inputs_valid);
 }
 
@@ -361,6 +385,54 @@ void Main_Interface::On_Input_Box_Destroy(GtkWidget* self, gpointer user_data)
     free((void*)user_data);
 }
 
+void Main_Interface::On_4x4_Clicked(GtkToggleButton* self, gpointer user_data)
+{
+    // Cast pointer to interface
+    Main_Interface* interface_ptr = (Main_Interface*)user_data;
+
+    // Determine whether 4x4 mode or 5x5 mode should be enabled
+    bool is_4x4 = (bool)(gtk_toggle_button_get_active(self));
+
+    // Preform actions based on current state of interface and buttons
+    if (is_4x4 && !interface_ptr->m_is_4x4)
+    {
+        // Interface needs to be set to 4x4 mode
+        free(*interface_ptr->m_board_ptr);
+        *interface_ptr->m_board_ptr = new Board(4);
+        interface_ptr->Destroy_Input_Screen();
+        interface_ptr->Initialize_Input_Screen();
+    }
+    else if (!is_4x4 && interface_ptr->m_is_4x4)
+    {
+        // Keep interface at 4x4 and activate 4x4 button
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(interface_ptr->m_board_size_4x4_button_ptr), gtk_true());
+    }
+}
+
+void Main_Interface::On_5x5_Clicked(GtkToggleButton* self, gpointer user_data)
+{
+    // Cast pointer to interface
+    Main_Interface* interface_ptr = (Main_Interface*)user_data;
+
+    // Determine whether 4x4 mode or 5x5 mode should be enabled
+    bool is_5x5 = (bool)(gtk_toggle_button_get_active(self));
+
+    // Preform actions based on current state of interface and buttons
+    if (is_5x5 && interface_ptr->m_is_4x4)
+    {
+        // Interface needs to be set to 5x5 mode
+        free(*interface_ptr->m_board_ptr);
+        *interface_ptr->m_board_ptr = new Board(5);
+        interface_ptr->Destroy_Input_Screen();
+        interface_ptr->Initialize_Input_Screen();
+    }
+    else if (!is_5x5 && !interface_ptr->m_is_4x4)
+    {
+        // Keep interface at 5x5 and activate 5x5 button
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(interface_ptr->m_board_size_5x5_button_ptr), gtk_true());
+    }
+}
+
 void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
 {
     // Silence -Wunused-parameter (parameter is needed in callback signature)
@@ -370,20 +442,20 @@ void Main_Interface::On_Randomized_Clicked(GtkWidget* self, gpointer user_data)
     Main_Interface* interface_ptr = (Main_Interface*)user_data;
 
     // Randomize board
-    interface_ptr->m_board_ptr->Randomize();
+    (*interface_ptr->m_board_ptr)->Randomize();
 
     // Update text input boxes
-    for (uint8_t x = 0; x < interface_ptr->m_board_ptr->Get_Board_Size(); x++)
+    for (uint8_t x = 0; x < (*interface_ptr->m_board_ptr)->Get_Board_Size(); x++)
     {
-        for (uint8_t y = 0; y < interface_ptr->m_board_ptr->Get_Board_Size(); y++)
+        for (uint8_t y = 0; y < (*interface_ptr->m_board_ptr)->Get_Board_Size(); y++)
         {
-            std::string cell_value = interface_ptr->m_board_ptr->Get_Board_Cell(x, y);
+            std::string cell_value = (*interface_ptr->m_board_ptr)->Get_Board_Cell(x, y);
             gtk_entry_set_text(GTK_ENTRY(interface_ptr->m_entry_box_ptrs[x][y]), cell_value.c_str());
         }
     }
 
     // Enable / disable solve button
-    Check_Inputs(interface_ptr);
+    interface_ptr->Check_Inputs();
     gtk_widget_set_sensitive(interface_ptr->m_solve_button_ptr, (gboolean)interface_ptr->m_are_inputs_valid);
 }
 
@@ -431,8 +503,8 @@ void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t*
     uint8_t x_position = interface_ptr->m_selected_solution.x_positions[0];
     uint8_t y_position = interface_ptr->m_selected_solution.y_positions[0];
 
-    cairo_move_to(cairo_ptr, ((double)width / interface_ptr->m_board_ptr->Get_Board_Size()) * x_position + ((double)width / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0),
-                  ((double)height / interface_ptr->m_board_ptr->Get_Board_Size()) * y_position + ((double)height / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0));
+    cairo_move_to(cairo_ptr, ((double)width / (*interface_ptr->m_board_ptr)->Get_Board_Size()) * x_position + ((double)width / (*interface_ptr->m_board_ptr)->Get_Board_Size() / 2.0),
+                  ((double)height / (*interface_ptr->m_board_ptr)->Get_Board_Size()) * y_position + ((double)height / (*interface_ptr->m_board_ptr)->Get_Board_Size() / 2.0));
 
     // Loop through path
     for (uint32_t i = 1; i < interface_ptr->m_selected_solution.x_positions.size(); i++)
@@ -440,8 +512,8 @@ void Main_Interface::On_Solution_Path_Draw(GtkWidget* drawing_area_ptr, cairo_t*
         x_position = interface_ptr->m_selected_solution.x_positions[i];
         y_position = interface_ptr->m_selected_solution.y_positions[i];
 
-        cairo_line_to(cairo_ptr, ((double)width / interface_ptr->m_board_ptr->Get_Board_Size()) * x_position + ((double)width / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0),
-                      ((double)height / interface_ptr->m_board_ptr->Get_Board_Size()) * y_position + ((double)height / interface_ptr->m_board_ptr->Get_Board_Size() / 2.0));
+        cairo_line_to(cairo_ptr, ((double)width / (*interface_ptr->m_board_ptr)->Get_Board_Size()) * x_position + ((double)width / (*interface_ptr->m_board_ptr)->Get_Board_Size() / 2.0),
+                      ((double)height / (*interface_ptr->m_board_ptr)->Get_Board_Size()) * y_position + ((double)height / (*interface_ptr->m_board_ptr)->Get_Board_Size() / 2.0));
     }
 
     cairo_stroke(cairo_ptr);

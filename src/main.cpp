@@ -5,8 +5,10 @@
 
 int main(int argc, char* argv[])
 {
-    Board board(5);
-    Main_Interface main_interface(&argc, &argv, &board);
+    Board* board_ptr = new Board(4);
+    Main_Interface main_interface(&argc, &argv, &board_ptr);
+
+    free(board_ptr);
 
     return 0;
 }

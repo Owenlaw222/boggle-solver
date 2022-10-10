@@ -15,7 +15,7 @@ public:
     };
 
 private:
-    Board* m_board_ptr;
+    Board** m_board_ptr;
 
     std::string m_word_list_path;
 
@@ -30,7 +30,7 @@ private:
     void Solve_From_Cell(unsigned int cell_x, unsigned int cell_y);
 
 public:
-    Solver(Board* board_ptr, std::string word_list_path);
+    Solver(Board** board_ptr, std::string word_list_path);
 
 public:
     std::vector<Solution> Get_Solutions();

@@ -4,13 +4,13 @@
 #include <fstream>
 #include <iostream>
 
-Solver::Solver(Board* board_ptr, std::string word_list_path) : m_board_ptr(board_ptr), m_word_list_path(word_list_path)
+Solver::Solver(Board** board_ptr, std::string word_list_path) : m_board_ptr(board_ptr), m_word_list_path(word_list_path)
 {
     Load_Word_List();
 
-    for (unsigned int x = 0; x < m_board_ptr->Get_Board_Size(); x++)
+    for (unsigned int x = 0; x < (*m_board_ptr)->Get_Board_Size(); x++)
     {
-        for (unsigned int y = 0; y < m_board_ptr->Get_Board_Size(); y++)
+        for (unsigned int y = 0; y < (*m_board_ptr)->Get_Board_Size(); y++)
         {
             Solve_From_Cell(x, y);
         }
@@ -108,10 +108,10 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
 {
     std::pair<int, int> offsets[8] = {{-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}};
 
-    std::string current_word = m_board_ptr->Get_Board_Cell(cell_x, cell_y);
+    std::string current_word = (*m_board_ptr)->Get_Board_Cell(cell_x, cell_y);
     std::vector<unsigned int> direction_stack = {0};
-    std::vector<std::pair<int, int>> search_range_stack = {Find_Range({0, m_word_list.size() - 1}, *m_board_ptr->Get_Board_Cell(cell_x, cell_y).c_str(), 0)};
-    std::vector<std::vector<bool>> cells_visited(m_board_ptr->Get_Board_Size(), std::vector<bool>(m_board_ptr->Get_Board_Size(), false));
+    std::vector<std::pair<int, int>> search_range_stack = {Find_Range({0, m_word_list.size() - 1}, *(*m_board_ptr)->Get_Board_Cell(cell_x, cell_y).c_str(), 0)};
+    std::vector<std::vector<bool>> cells_visited((*m_board_ptr)->Get_Board_Size(), std::vector<bool>((*m_board_ptr)->Get_Board_Size(), false));
 
     if (search_range_stack.back().first == -1 || search_range_stack.back().second == -1)
     {
@@ -143,13 +143,13 @@ void Solver::Solve_From_Cell(unsigned int cell_x, unsigned int cell_y)
         int offset_current_x = current_x + offset.first;
         int offset_current_y = current_y + offset.second;
 
-        if (offset_current_x < 0 || offset_current_y < 0 || offset_current_x >= (int)m_board_ptr->Get_Board_Size() || offset_current_y >= (int)m_board_ptr->Get_Board_Size() || cells_visited[offset_current_x][offset_current_y])
+        if (offset_current_x < 0 || offset_current_y < 0 || offset_current_x >= (int)(*m_board_ptr)->Get_Board_Size() || offset_current_y >= (int)(*m_board_ptr)->Get_Board_Size() || cells_visited[offset_current_x][offset_current_y])
         {
             direction_stack.back()++;
             continue;
         }
 
-        char offset_cell_char = *m_board_ptr->Get_Board_Cell(offset_current_x, offset_current_y).c_str();
+        char offset_cell_char = *(*m_board_ptr)->Get_Board_Cell(offset_current_x, offset_current_y).c_str();
 
         std::pair<int, int> range = Find_Range(search_range_stack.back(), offset_cell_char, current_word.size());
         if (range.first == -1 || range.second == -1)
