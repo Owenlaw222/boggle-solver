@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <iostream>
+#include <random>
 
 
 Board::Board(unsigned int size) : m_board_size(size)
@@ -26,6 +28,8 @@ Board::Board(unsigned int size) : m_board_size(size)
 
 void Board::Randomize()
 {
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+
     switch (m_board_size)
     {
         case 4:
@@ -34,7 +38,7 @@ void Board::Randomize()
                                                            {"L", "R", "E", "I", "X", "D"}, {"E", "I", "U", "N", "E", "S"}, {"W", "N", "G", "E", "E", "H"}, {"L", "N", "H", "N", "R", "Z"}, {"T", "S", "T", "I", "Y", "D"}, {"O", "W", "T", "O", "A", "T"},
                                                            {"E", "R", "T", "T", "Y", "L"}, {"T", "O", "E", "S", "S", "I"}, {"T", "E", "R", "W", "H", "V"}, {"N", "U", "I", "H", "M", "1"}};
 
-            std::random_shuffle(die.begin(), die.end());
+            std::shuffle(die.begin(), die.end(), std::default_random_engine(seed));
 
             for (unsigned int i = 0; i < m_board_size; i++)
             {
@@ -53,7 +57,7 @@ void Board::Randomize()
                    {"D", "H", "H", "N", "O", "W"}, {"D", "H", "L", "N", "O", "R"}, {"E", "I", "I", "I", "T", "T"}, {"E", "I", "L", "P", "S", "T"}, {"E", "M", "O", "T", "T", "T"}, {"E", "N", "S", "S", "S", "U"}, {"1", "2", "3", "4", "5", "6"},
                    {"G", "O", "R", "R", "V", "W"}, {"I", "P", "R", "S", "Y", "Y"}, {"N", "O", "O", "T", "U", "W"}, {"O", "O", "O", "T", "T", "U"}};
 
-            std::random_shuffle(die.begin(), die.end());
+            std::shuffle(die.begin(), die.end(), std::default_random_engine(seed));
 
             for (unsigned int i = 0; i < m_board_size; i++)
             {
